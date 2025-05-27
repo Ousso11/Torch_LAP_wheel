@@ -1,29 +1,39 @@
-### 🔧 Ultra-minimal CUDA Wheel Builder with PyTorch Only
+### 🔧 Final Lightweight CUDA Wheel Builder with PyTorch (Python 3.11)
+
 FROM --platform=linux/amd64 nvidia/cuda:12.1.1-runtime-ubuntu20.04 AS builder
 
+# Environment
 ENV DEBIAN_FRONTEND=noninteractive
+ENV PATH=/opt/conda/bin:$PATH
 ENV CUDA_HOME=/usr/local/cuda
 
-# Install Python, pip, build tools
+# Install system tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3.11 python3.11-venv python3.11-dev python3-pip \
-    git build-essential cmake ca-certificates curl && \
+    curl git build-essential cmake ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
-# Set Python 3.11 as default
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1 && \
-    update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
+# Install Miniconda with Python 3.11
+RUN curl -L -o miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-py311_23.11.0-1-Linux-x86_64.sh && \
+    bash miniconda.sh -b -p /opt/conda && \
+    rm miniconda.sh && \
+    /opt/conda/bin/conda clean -afy
 
-# Install torch with CUDA 12.1 and build deps
-RUN pip install --no-cache-dir \
+# Create minimal Python 3.11 environment
+RUN conda create -y -n torch-env python=3.11 && \
+    echo "conda activate torch-env" >> ~/.bashrc
+
+# Install PyTorch with CUDA 12.1 + build tools
+RUN /opt/conda/bin/conda run -n torch-env pip install --no-cache-dir \
     torch==2.2.0 --index-url https://download.pytorch.org/whl/cu121 && \
-    pip install --no-cache-dir setuptools wheel
+    /opt/conda/bin/conda run -n torch-env pip install --no-cache-dir \
+    setuptools wheel
 
-# Clone and build the wheel
+# Clone and build wheel
 WORKDIR /app
 RUN git clone https://github.com/ivan-chai/torch-linear-assignment.git .
-RUN pip install . && python setup.py bdist_wheel
+RUN /opt/conda/bin/conda run -n torch-env pip install . && \
+    /opt/conda/bin/conda run -n torch-env python setup.py bdist_wheel
 
-# Export built wheel
+# Export only the wheel artifact
 FROM scratch AS export-stage
 COPY --from=builder /app/dist .
