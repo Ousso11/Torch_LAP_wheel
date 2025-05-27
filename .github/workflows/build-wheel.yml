@@ -26,12 +26,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build CUDA wheel and push image
+      - name: Set lowercase owner as env var
+        id: lower-owner
+        run: echo "REPO_OWNER_LC=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository_owner | toLower }}/tla-builder:latest
+          tags: ghcr.io/${{ env.REPO_OWNER_LC }}/tla-builder:latest
           platforms: linux/amd64
           outputs: type=local,dest=wheel_output
 
@@ -41,3 +45,4 @@ jobs:
           files: wheel_output/*.whl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
