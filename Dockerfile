@@ -30,7 +30,7 @@ RUN /opt/miniconda/bin/conda run -n torch-env pip install --no-cache-dir \
 # Clone repo and build
 WORKDIR /app
 RUN git clone https://github.com/ivan-chai/torch-linear-assignment.git .
-RUN /opt/miniconda/bin/conda run -n torch-env pip --no-build-isolation install . && \
+RUN /opt/miniconda/bin/conda run -n torch-env pip . && \
     /opt/miniconda/bin/conda run -n torch-env python setup.py bdist_wheel
 
 # Export Stage
