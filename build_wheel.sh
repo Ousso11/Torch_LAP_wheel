@@ -3,7 +3,7 @@ set -e
 
 # === Configuration ===
 TAG="ousso11/tla-builder:latest"
-OUTPUT_DIR="$(pwd)/built_wheel"
+OUTPUT_DIR="$(pwd)/wheel"
 DOCKERFILE_PATH="."
 
 # === Preparation ===

@@ -29,18 +29,19 @@ RUN /opt/conda/bin/conda run -n torch-env pip install --no-cache-dir \
     /opt/conda/bin/conda run -n torch-env pip install --no-cache-dir \
     setuptools wheel ninja
 
-# ---- Clone and Build Project ----
+# ---- Copy Local Project Files ----
 WORKDIR /app
-RUN git clone https://github.com/ivan-chai/torch-linear-assignment.git .
+COPY . .
 
-# Build the wheel (triggers CUDA extension compilation)
+# ---- Build the Wheel (triggers CUDA extension compilation) ----
 RUN /opt/conda/bin/conda run -n torch-env python setup.py bdist_wheel
 
-# ---- ✅ Verify Backend Compilation ----
+# ---- Verify Backend Compilation ----
 RUN /opt/conda/bin/conda run -n torch-env python -c "\
 from torch_linear_assignment import _backend; \
-print('✅ torch_linear_assignment._backend contains:', dir(_backend)); \
-assert hasattr(_backend, 'batch_linear_assignment'), '❌ Missing batch_linear_assignment in compiled backend!'"
+print('torch_linear_assignment._backend contains:', dir(_backend)); \
+assert hasattr(_backend, 'batch_linear_assignment'), 'Missing batch_linear_assignment in compiled backend!'"
+
 
 # ---- Export Only the Built Wheel ----
 FROM scratch AS export-stage
