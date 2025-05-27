@@ -31,7 +31,7 @@ RUN /opt/conda/bin/conda run -n torch-env pip install --no-cache-dir \
 # Clone and build wheel
 WORKDIR /app
 RUN git clone https://github.com/ivan-chai/torch-linear-assignment.git .
-RUN /opt/conda/bin/conda run -n torch-env pip install . && \
+RUN /opt/conda/bin/conda run -n torch-env pip install --no-deps . && \
     /opt/conda/bin/conda run -n torch-env python setup.py bdist_wheel
 
 # Export only the wheel artifact
