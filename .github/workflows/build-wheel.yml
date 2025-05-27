@@ -31,7 +31,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/tla-builder:latest
+          tags: ghcr.io/${{ github.repository_owner | toLower }}/tla-builder:latest
           platforms: linux/amd64
           outputs: type=local,dest=wheel_output
 
