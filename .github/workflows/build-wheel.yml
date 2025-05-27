@@ -42,7 +42,8 @@ jobs:
       - name: Upload wheel to GitHub Release
         uses: softprops/action-gh-release@v1
         with:
+          tag_name: cuda-wheel-${{ github.sha }}
+          name: "CUDA Wheel Build - ${{ github.sha }}"
           files: wheel_output/*.whl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
