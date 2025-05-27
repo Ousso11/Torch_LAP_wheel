@@ -1,43 +1,37 @@
-### 🔧 Dockerfile: CUDA-enabled wheel builder (Dockerfile)
-# Build Stage: Linux x86_64 with CUDA
+### 🔧 Minimal CUDA Wheel Builder with PyTorch Only
 FROM --platform=linux/amd64 nvidia/cuda:12.1.1-devel-ubuntu20.04 AS builder
 
-SHELL ["/bin/bash", "-c"]
+# Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
-ENV PATH=/opt/conda/bin:$PATH
-ENV TLA_BUILD_CUDA=1
+ENV PATH=/opt/miniconda/bin:$PATH
 ENV CUDA_HOME=/usr/local/cuda
 
-# Install dependencies
-RUN apt-get update && apt-get install -y \
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl git build-essential cmake ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
-# Install Miniforge (Python 3.11)
-RUN curl -L -o Miniforge.sh https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh && \
-    bash Miniforge.sh -b -p /opt/conda && \
-    rm Miniforge.sh && \
-    /opt/conda/bin/conda clean -afy
+# Install Miniconda (lightweight)
+RUN curl -L -o miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
+    bash miniconda.sh -b -p /opt/miniconda && \
+    rm miniconda.sh && \
+    /opt/miniconda/bin/conda clean -afy
 
-# Set up Conda environment
-RUN conda create -y -n torch-env python=3.11 && \
+# Create environment with Python 3.11
+RUN /opt/miniconda/bin/conda create -y -n torch-env python=3.11 && \
     echo "conda activate torch-env" >> ~/.bashrc
 
-# Install PyTorch and build tools
-RUN source /opt/conda/bin/activate torch-env && \
-    conda install -y pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvidia && \
-    pip install --upgrade pip setuptools wheel ninja
+# Install only PyTorch with CUDA 12.1
+RUN /opt/miniconda/bin/conda run -n torch-env pip install --no-cache-dir \
+    torch==2.2.0 --index-url https://download.pytorch.org/whl/cu121 && \
+    /opt/miniconda/bin/conda run -n torch-env pip install --no-cache-dir \
+    setuptools wheel
 
-# Show CUDA info
-RUN source /opt/conda/bin/activate torch-env && \
-    python -c "import torch; print('✅ CUDA available:', torch.cuda.is_available()); print('🧱 CUDA built:', torch.backends.cuda.is_built())"
-
-# Clone and build
+# Clone repo and build
 WORKDIR /app
 RUN git clone https://github.com/ivan-chai/torch-linear-assignment.git .
-RUN source /opt/conda/bin/activate torch-env && \
-    pip install . && \
-    python setup.py bdist_wheel
+RUN /opt/miniconda/bin/conda run -n torch-env pip install . && \
+    /opt/miniconda/bin/conda run -n torch-env python setup.py bdist_wheel
 
 # Export Stage
 FROM scratch AS export-stage
