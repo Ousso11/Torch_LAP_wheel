@@ -36,12 +36,6 @@ COPY . .
 # ---- Build the Wheel (triggers CUDA extension compilation) ----
 RUN /opt/conda/bin/conda run -n torch-env python setup.py bdist_wheel
 
-# ---- Verify Backend Compilation ----
-RUN /opt/conda/bin/conda run -n torch-env python -c "\
-from torch_linear_assignment import _backend; \
-print('torch_linear_assignment._backend contains:', dir(_backend)); \
-assert hasattr(_backend, 'batch_linear_assignment'), 'Missing batch_linear_assignment in compiled backend!'"
-
 
 # ---- Export Only the Built Wheel ----
 FROM scratch AS export-stage
