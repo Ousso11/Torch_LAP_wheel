@@ -35,3 +35,13 @@ docker buildx build \
 
 echo "✅ Build complete! Wheel saved to: $OUTPUT_DIR"
 echo "Docker image tagged as: $TAG"
+
+# === Optional: Run container interactively ===
+read -p "🧪 Do you want to run the Docker image interactively? (y/N): " RUN_INTERACTIVE
+
+if [[ "$RUN_INTERACTIVE" =~ ^[Yy]$ ]]; then
+    echo "🔄 Running Docker image interactively..."
+    docker run --rm -it "$TAG" /bin/bash
+else
+    echo "ℹ️ Skipping interactive run."
+fi

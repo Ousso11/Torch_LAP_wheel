@@ -33,8 +33,8 @@ jobs:
       - name: Check if wheel already exists
         id: check-wheel
         run: |
-          mkdir -p wheel_output
-          if compgen -G "wheel_output/*.whl" > /dev/null; then
+          mkdir -p wheel
+          if compgen -G "wheel/*.whl" > /dev/null; then
             echo "WHEEL_EXISTS=true" >> $GITHUB_ENV
           else
             echo "WHEEL_EXISTS=false" >> $GITHUB_ENV
@@ -48,13 +48,13 @@ jobs:
           push: true
           tags: ghcr.io/${{ env.REPO_OWNER_LC }}/tla-builder:latest
           platforms: linux/amd64
-          outputs: type=local,dest=wheel_output
+          outputs: type=local,dest=wheel
 
       - name: Upload wheel to GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: cuda-wheel-${{ github.sha }}
           name: "CUDA Wheel Build - ${{ github.sha }}"
-          files: wheel_output/*.whl
+          files: wheel/*.whl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
