@@ -30,7 +30,18 @@ jobs:
         id: lower-owner
         run: echo "REPO_OWNER_LC=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
-      - name: Build and push Docker image
+      - name: Check if wheel already exists
+        id: check-wheel
+        run: |
+          mkdir -p wheel_output
+          if compgen -G "wheel_output/*.whl" > /dev/null; then
+            echo "WHEEL_EXISTS=true" >> $GITHUB_ENV
+          else
+            echo "WHEEL_EXISTS=false" >> $GITHUB_ENV
+          fi
+
+      - name: Build and push Docker image (only if wheel not found)
+        if: env.WHEEL_EXISTS == 'false'
         uses: docker/build-push-action@v5
         with:
           context: .
